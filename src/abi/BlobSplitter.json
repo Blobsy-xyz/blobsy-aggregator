@@ -1,0 +1,293 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "postBlob",
+      "inputs": [
+        {
+          "name": "segments",
+          "type": "tuple[]",
+          "internalType": "struct IBlobReceiver.BlobSegment[]",
+          "components": [
+            {
+              "name": "receiverAddress",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "firstBlobIndex",
+              "type": "uint64",
+              "internalType": "uint64"
+            },
+            {
+              "name": "numBlobs",
+              "type": "uint8",
+              "internalType": "uint8"
+            },
+            {
+              "name": "offset",
+              "type": "uint64",
+              "internalType": "uint64"
+            },
+            {
+              "name": "length",
+              "type": "uint64",
+              "internalType": "uint64"
+            },
+            {
+              "name": "payload",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "blobHash",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "BlobSegmentPosted",
+      "inputs": [
+        {
+          "name": "receiverAddress",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "firstBlobIndex",
+          "type": "uint64",
+          "indexed": false,
+          "internalType": "uint64"
+        },
+        {
+          "name": "numBlobs",
+          "type": "uint8",
+          "indexed": false,
+          "internalType": "uint8"
+        },
+        {
+          "name": "offset",
+          "type": "uint64",
+          "indexed": false,
+          "internalType": "uint64"
+        },
+        {
+          "name": "length",
+          "type": "uint64",
+          "indexed": false,
+          "internalType": "uint64"
+        },
+        {
+          "name": "payload",
+          "type": "bytes",
+          "indexed": false,
+          "internalType": "bytes"
+        },
+        {
+          "name": "blobHash",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "success",
+          "type": "bool",
+          "indexed": false,
+          "internalType": "bool"
+        }
+      ],
+      "anonymous": false
+    }
+  ],
+  "bytecode": {
+    "object": "0x6080604052348015600e575f80fd5b5061067c8061001c5f395ff3fe608060405234801561000f575f80fd5b5060043610610029575f3560e01c8063ff223fd11461002d575b5f80fd5b61004061003b366004610270565b610042565b005b5f5b8181101561026b573683838381811061005f5761005f6102e1565b9050602002810190610071919061030e565b90505f6100816020830183610372565b90505f806100926020850185610372565b73ffffffffffffffffffffffffffffffffffffffff16146101aa578173ffffffffffffffffffffffffffffffffffffffff1663af43dc0260e01b846040516024016100dd9190610467565b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08184030181529181526020820180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff167fffffffff000000000000000000000000000000000000000000000000000000009094169390931790925290516101669190610535565b5f604051808303815f865af19150503d805f811461019f576040519150601f19603f3d011682016040523d82523d5f602084013e6101a4565b606091505b50909150505b6101b76020840184610372565b73ffffffffffffffffffffffffffffffffffffffff167f35fc11fa261b39c3584e63aa5fd43e446d0d9afad4fd933a07deb6c8907168136101fe604086016020870161054b565b61020e6060870160408801610564565b61021e608088016060890161054b565b61022e60a0890160808a0161054b565b61023b60a08a018a61057d565b8a60c00135896040516102559897969594939291906105de565b60405180910390a2505050806001019050610044565b505050565b5f8060208385031215610281575f80fd5b823567ffffffffffffffff811115610297575f80fd5b8301601f810185136102a7575f80fd5b803567ffffffffffffffff8111156102bd575f80fd5b8560208260051b84010111156102d1575f80fd5b6020919091019590945092505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52603260045260245ffd5b5f82357fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff21833603018112610340575f80fd5b9190910192915050565b803573ffffffffffffffffffffffffffffffffffffffff8116811461036d575f80fd5b919050565b5f60208284031215610382575f80fd5b61038b8261034a565b9392505050565b803567ffffffffffffffff8116811461036d575f80fd5b803560ff8116811461036d575f80fd5b5f8083357fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe18436030181126103ec575f80fd5b830160208101925035905067ffffffffffffffff81111561040b575f80fd5b803603821315610419575f80fd5b9250929050565b81835281816020850137505f602082840101525f60207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f840116840101905092915050565b6020815273ffffffffffffffffffffffffffffffffffffffff6104898361034a565b16602082015267ffffffffffffffff6104a460208401610392565b16604082015260ff6104b8604084016103a9565b1660608201525f6104cb60608401610392565b67ffffffffffffffff81166080840152506104e860808401610392565b67ffffffffffffffff811660a08401525061050660a08401846103b9565b60e060c085015261051c61010085018284610420565b60c0959095013560e09490940193909352509192915050565b5f82518060208501845e5f920191825250919050565b5f6020828403121561055b575f80fd5b61038b82610392565b5f60208284031215610574575f80fd5b61038b826103a9565b5f8083357fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe18436030181126105b0575f80fd5b83018035915067ffffffffffffffff8211156105ca575f80fd5b602001915036819003821315610419575f80fd5b67ffffffffffffffff8916815260ff8816602082015267ffffffffffffffff8716604082015267ffffffffffffffff8616606082015260e060808201525f61062a60e083018688610420565b60a08301949094525090151560c090910152969550505050505056fea2646970667358221220dc8bc9aaaa559a485356052ac37b2553a3d2b97393823c55c0b4b780fffdeacb64736f6c634300081a0033",
+    "sourceMap": "1398:1487:0:-:0;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x608060405234801561000f575f80fd5b5060043610610029575f3560e01c8063ff223fd11461002d575b5f80fd5b61004061003b366004610270565b610042565b005b5f5b8181101561026b573683838381811061005f5761005f6102e1565b9050602002810190610071919061030e565b90505f6100816020830183610372565b90505f806100926020850185610372565b73ffffffffffffffffffffffffffffffffffffffff16146101aa578173ffffffffffffffffffffffffffffffffffffffff1663af43dc0260e01b846040516024016100dd9190610467565b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08184030181529181526020820180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff167fffffffff000000000000000000000000000000000000000000000000000000009094169390931790925290516101669190610535565b5f604051808303815f865af19150503d805f811461019f576040519150601f19603f3d011682016040523d82523d5f602084013e6101a4565b606091505b50909150505b6101b76020840184610372565b73ffffffffffffffffffffffffffffffffffffffff167f35fc11fa261b39c3584e63aa5fd43e446d0d9afad4fd933a07deb6c8907168136101fe604086016020870161054b565b61020e6060870160408801610564565b61021e608088016060890161054b565b61022e60a0890160808a0161054b565b61023b60a08a018a61057d565b8a60c00135896040516102559897969594939291906105de565b60405180910390a2505050806001019050610044565b505050565b5f8060208385031215610281575f80fd5b823567ffffffffffffffff811115610297575f80fd5b8301601f810185136102a7575f80fd5b803567ffffffffffffffff8111156102bd575f80fd5b8560208260051b84010111156102d1575f80fd5b6020919091019590945092505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52603260045260245ffd5b5f82357fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff21833603018112610340575f80fd5b9190910192915050565b803573ffffffffffffffffffffffffffffffffffffffff8116811461036d575f80fd5b919050565b5f60208284031215610382575f80fd5b61038b8261034a565b9392505050565b803567ffffffffffffffff8116811461036d575f80fd5b803560ff8116811461036d575f80fd5b5f8083357fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe18436030181126103ec575f80fd5b830160208101925035905067ffffffffffffffff81111561040b575f80fd5b803603821315610419575f80fd5b9250929050565b81835281816020850137505f602082840101525f60207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f840116840101905092915050565b6020815273ffffffffffffffffffffffffffffffffffffffff6104898361034a565b16602082015267ffffffffffffffff6104a460208401610392565b16604082015260ff6104b8604084016103a9565b1660608201525f6104cb60608401610392565b67ffffffffffffffff81166080840152506104e860808401610392565b67ffffffffffffffff811660a08401525061050660a08401846103b9565b60e060c085015261051c61010085018284610420565b60c0959095013560e09490940193909352509192915050565b5f82518060208501845e5f920191825250919050565b5f6020828403121561055b575f80fd5b61038b82610392565b5f60208284031215610574575f80fd5b61038b826103a9565b5f8083357fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe18436030181126105b0575f80fd5b83018035915067ffffffffffffffff8211156105ca575f80fd5b602001915036819003821315610419575f80fd5b67ffffffffffffffff8916815260ff8816602082015267ffffffffffffffff8716604082015267ffffffffffffffff8616606082015260e060808201525f61062a60e083018688610420565b60a08301949094525090151560c090910152969550505050505056fea2646970667358221220dc8bc9aaaa559a485356052ac37b2553a3d2b97393823c55c0b4b780fffdeacb64736f6c634300081a0033",
+    "sourceMap": "1398:1487:0:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1894:989;;;;;;:::i;:::-;;:::i;:::-;;;1983:9;1978:899;1998:19;;;1978:899;;;2038:42;2083:8;;2092:1;2083:11;;;;;;;:::i;:::-;;;;;;;;;;;;:::i;:::-;2038:56;-1:-1:-1;2108:22:0;2147:23;;;;2038:56;2147:23;:::i;:::-;2108:63;-1:-1:-1;2252:12:0;;2290:23;;;;:7;:23;:::i;:::-;:37;;;2286:176;;2369:8;2361:22;;2407:29;;;2438:7;2384:62;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2361:86;;;;2384:62;2361:86;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;2347:100:0;;-1:-1:-1;;2286:176:0;2599:23;;;;:7;:23;:::i;:::-;2564:302;;;2640:22;;;;;;;;:::i;:::-;2680:16;;;;;;;;:::i;:::-;2714:14;;;;;;;;:::i;:::-;2746;;;;;;;;:::i;:::-;2778:15;;;;:7;:15;:::i;:::-;2811:7;:16;;;2845:7;2564:302;;;;;;;;;;;;;:::i;:::-;;;;;;;;2024:853;;;2019:3;;;;;1978:899;;;;1894:989;;:::o;14:639:1:-;129:6;137;190:2;178:9;169:7;165:23;161:32;158:52;;;206:1;203;196:12;158:52;246:9;233:23;279:18;271:6;268:30;265:50;;;311:1;308;301:12;265:50;334:22;;387:4;379:13;;375:27;-1:-1:-1;365:55:1;;416:1;413;406:12;365:55;456:2;443:16;482:18;474:6;471:30;468:50;;;514:1;511;504:12;468:50;567:7;562:2;552:6;549:1;545:14;541:2;537:23;533:32;530:45;527:65;;;588:1;585;578:12;527:65;619:2;611:11;;;;;641:6;;-1:-1:-1;14:639:1;-1:-1:-1;;;14:639:1:o;658:184::-;710:77;707:1;700:88;807:4;804:1;797:15;831:4;828:1;821:15;847:385;942:4;1000:11;987:25;1090:66;1079:8;1063:14;1059:29;1055:102;1035:18;1031:127;1021:155;;1172:1;1169;1162:12;1021:155;1193:33;;;;;847:385;-1:-1:-1;;847:385:1:o;1237:196::-;1305:20;;1365:42;1354:54;;1344:65;;1334:93;;1423:1;1420;1413:12;1334:93;1237:196;;;:::o;1438:186::-;1497:6;1550:2;1538:9;1529:7;1525:23;1521:32;1518:52;;;1566:1;1563;1556:12;1518:52;1589:29;1608:9;1589:29;:::i;:::-;1579:39;1438:186;-1:-1:-1;;;1438:186:1:o;1629:171::-;1696:20;;1756:18;1745:30;;1735:41;;1725:69;;1790:1;1787;1780:12;1912:156;1978:20;;2038:4;2027:16;;2017:27;;2007:55;;2058:1;2055;2048:12;2073:559;2131:5;2138:6;2198:3;2185:17;2280:66;2269:8;2253:14;2249:29;2245:102;2225:18;2221:127;2211:155;;2362:1;2359;2352:12;2211:155;2390:33;;2494:4;2481:18;;;-1:-1:-1;2442:21:1;;-1:-1:-1;2522:18:1;2511:30;;2508:50;;;2554:1;2551;2544:12;2508:50;2601:6;2585:14;2581:27;2574:5;2570:39;2567:59;;;2622:1;2619;2612:12;2567:59;2073:559;;;;;:::o;2637:325::-;2725:6;2720:3;2713:19;2777:6;2770:5;2763:4;2758:3;2754:14;2741:43;;2829:1;2822:4;2813:6;2808:3;2804:16;2800:27;2793:38;2695:3;2951:4;2881:66;2876:2;2868:6;2864:15;2860:88;2855:3;2851:98;2847:109;2840:116;;2637:325;;;;:::o;2967:1116::-;3152:2;3141:9;3134:21;3223:42;3195:26;3214:6;3195:26;:::i;:::-;3191:75;3186:2;3175:9;3171:18;3164:103;3343:18;3307:34;3337:2;3329:6;3325:15;3307:34;:::i;:::-;3303:59;3298:2;3287:9;3283:18;3276:87;3438:4;3403:33;3432:2;3424:6;3420:15;3403:33;:::i;:::-;3399:44;3394:2;3383:9;3379:18;3372:72;3115:4;3473:34;3503:2;3495:6;3491:15;3473:34;:::i;:::-;1881:18;1870:30;;3563:3;3548:19;;1858:43;3516:52;3599:35;3629:3;3621:6;3617:16;3599:35;:::i;:::-;1881:18;1870:30;;3692:3;3677:19;;1858:43;3643:54;3742:56;3793:3;3785:6;3781:16;3773:6;3742:56;:::i;:::-;3835:4;3829:3;3818:9;3814:19;3807:33;3863:76;3934:3;3923:9;3919:19;3905:12;3889:14;3863:76;:::i;:::-;4005:3;3993:16;;;;3980:30;4041:4;4026:20;;;;4019:35;;;;-1:-1:-1;3849:90:1;;2967:1116;-1:-1:-1;;2967:1116:1:o;4088:301::-;4217:3;4255:6;4249:13;4301:6;4294:4;4286:6;4282:17;4277:3;4271:37;4363:1;4327:16;;4352:13;;;-1:-1:-1;4327:16:1;4088:301;-1:-1:-1;4088:301:1:o;4394:184::-;4452:6;4505:2;4493:9;4484:7;4480:23;4476:32;4473:52;;;4521:1;4518;4511:12;4473:52;4544:28;4562:9;4544:28;:::i;4583:182::-;4640:6;4693:2;4681:9;4672:7;4668:23;4664:32;4661:52;;;4709:1;4706;4699:12;4661:52;4732:27;4749:9;4732:27;:::i;4770:580::-;4847:4;4853:6;4913:11;4900:25;5003:66;4992:8;4976:14;4972:29;4968:102;4948:18;4944:127;4934:155;;5085:1;5082;5075:12;4934:155;5112:33;;5164:20;;;-1:-1:-1;5207:18:1;5196:30;;5193:50;;;5239:1;5236;5229:12;5193:50;5272:4;5260:17;;-1:-1:-1;5303:14:1;5299:27;;;5289:38;;5286:58;;;5340:1;5337;5330:12;5355:761;5676:18;5668:6;5664:31;5653:9;5646:50;5744:4;5736:6;5732:17;5727:2;5716:9;5712:18;5705:45;5798:18;5790:6;5786:31;5781:2;5770:9;5766:18;5759:59;5866:18;5858:6;5854:31;5849:2;5838:9;5834:18;5827:59;5923:3;5917;5906:9;5902:19;5895:32;5627:4;5944:62;6001:3;5990:9;5986:19;5978:6;5970;5944:62;:::i;:::-;6037:3;6022:19;;6015:35;;;;-1:-1:-1;6094:14:1;;6087:22;6081:3;6066:19;;;6059:51;5936:70;5355:761;-1:-1:-1;;;;;;5355:761:1:o",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "postBlob((address,uint64,uint8,uint64,uint64,bytes,bytes32)[])": "ff223fd1"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.26+commit.8a97fa7a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"firstBlobIndex\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"numBlobs\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"offset\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"length\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"blobHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"name\":\"BlobSegmentPosted\",\"type\":\"event\"},{\"inputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"},{\"internalType\":\"uint64\",\"name\":\"firstBlobIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint8\",\"name\":\"numBlobs\",\"type\":\"uint8\"},{\"internalType\":\"uint64\",\"name\":\"offset\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"length\",\"type\":\"uint64\"},{\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"blobHash\",\"type\":\"bytes32\"}],\"internalType\":\"struct IBlobReceiver.BlobSegment[]\",\"name\":\"segments\",\"type\":\"tuple[]\"}],\"name\":\"postBlob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"postBlob((address,uint64,uint8,uint64,uint64,bytes,bytes32)[])\":{\"params\":{\"segments\":\"Array of blob segments to be dispatched.\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"postBlob((address,uint64,uint8,uint64,uint64,bytes,bytes32)[])\":{\"notice\":\"Posts an array of blob segments to their designated receiver         contracts as part of the blob-sharing protocol.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"BlobSplitter.sol\":\"BlobSplitter\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":1000000},\"remappings\":[\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-gas-snapshot/=lib/forge-gas-snapshot/src/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\",\":solmate/=lib/solmate/src/\",\":tstorish/=lib/tstorish/src/\"]},\"sources\":{\"BlobSplitter.sol\":{\"keccak256\":\"0xd0d081903b55fd2f3f616135906e3ee56e688fe880aedd7d10f7dbc1b55577b6\",\"license\":\"UNLICENSED\",\"urls\":[\"bzz-raw://e4f545ee96a1d51237e8ab0f464dbb3ad176d2c1d441422afdad08532de217cf\",\"dweb:/ipfs/Qmec9BnMshxZvwrQTFfc1jq2aXwYaRxCnc36Bxq8v76yb3\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.26+commit.8a97fa7a"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "receiverAddress",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "internalType": "uint64",
+              "name": "firstBlobIndex",
+              "type": "uint64",
+              "indexed": false
+            },
+            {
+              "internalType": "uint8",
+              "name": "numBlobs",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "internalType": "uint64",
+              "name": "offset",
+              "type": "uint64",
+              "indexed": false
+            },
+            {
+              "internalType": "uint64",
+              "name": "length",
+              "type": "uint64",
+              "indexed": false
+            },
+            {
+              "internalType": "bytes",
+              "name": "payload",
+              "type": "bytes",
+              "indexed": false
+            },
+            {
+              "internalType": "bytes32",
+              "name": "blobHash",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "internalType": "bool",
+              "name": "success",
+              "type": "bool",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "BlobSegmentPosted",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "struct IBlobReceiver.BlobSegment[]",
+              "name": "segments",
+              "type": "tuple[]",
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "receiverAddress",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint64",
+                  "name": "firstBlobIndex",
+                  "type": "uint64"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "numBlobs",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "uint64",
+                  "name": "offset",
+                  "type": "uint64"
+                },
+                {
+                  "internalType": "uint64",
+                  "name": "length",
+                  "type": "uint64"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "payload",
+                  "type": "bytes"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "blobHash",
+                  "type": "bytes32"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "postBlob"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "postBlob((address,uint64,uint8,uint64,uint64,bytes,bytes32)[])": {
+            "params": {
+              "segments": "Array of blob segments to be dispatched."
+            }
+          }
+        },
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {
+          "postBlob((address,uint64,uint8,uint64,uint64,bytes,bytes32)[])": {
+            "notice": "Posts an array of blob segments to their designated receiver         contracts as part of the blob-sharing protocol."
+          }
+        },
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+        "forge-gas-snapshot/=lib/forge-gas-snapshot/src/",
+        "forge-std/=lib/forge-std/src/",
+        "openzeppelin-contracts/=lib/openzeppelin-contracts/",
+        "solmate/=lib/solmate/src/",
+        "tstorish/=lib/tstorish/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 1000000
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "BlobSplitter.sol": "BlobSplitter"
+      },
+      "evmVersion": "cancun",
+      "libraries": {}
+    },
+    "sources": {
+      "BlobSplitter.sol": {
+        "keccak256": "0xd0d081903b55fd2f3f616135906e3ee56e688fe880aedd7d10f7dbc1b55577b6",
+        "urls": [
+          "bzz-raw://e4f545ee96a1d51237e8ab0f464dbb3ad176d2c1d441422afdad08532de217cf",
+          "dweb:/ipfs/Qmec9BnMshxZvwrQTFfc1jq2aXwYaRxCnc36Bxq8v76yb3"
+        ],
+        "license": "UNLICENSED"
+      }
+    },
+    "version": 1
+  },
+  "id": 0
+}
