@@ -1,0 +1,10 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+
+# higher optimizier runs = potentially cheaper to execute, but more expensive to deploy (larger codebase)
+optimizer = true
+optimizer_runs = 1000000
+solc = "0.8.26"
+evm_version = "cancun"
