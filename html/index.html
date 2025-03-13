@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blobsy Aggregator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="assets/blobsy-logo-small.png" alt="Blobsy Logo">
+                <h1>Blobsy Aggregator</h1>
+            </div>
+            <a href="https://github.com/Blobsy-xyz/blobsy-aggregator" class="github-link" target="_blank">
+                <i class="fab fa-github"></i>
+                More info on GitHub
+            </a>
+        </header>
+        
+        <main>
+            <div class="code-example">
+                <h2>Example Use</h2>
+                <pre><code>curl -X POST https://rpc.blobsy.xyz/sepolia \
+-H "Content-Type: application/json" \
+-d '{
+    "jsonrpc": "2.0",
+    "method": "eth_sendBlobSegment",
+    "params": [{
+        "maxBlobSegmentFee": "1000000000000000000",
+        "blobSegmentData": "0x68656c6c6f"
+    }],
+    "id": 1
+}'</code></pre>
+                <button class="copy-button" onclick="copyCode()">
+                    <i class="far fa-copy"></i>
+                    Copy
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.querySelector('code').innerText;
+            navigator.clipboard.writeText(code);
+            const button = document.querySelector('.copy-button');
+            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                button.innerHTML = '<i class="far fa-copy"></i> Copy';
+            }, 2000);
+        }
+    </script>
+</body>
+</html> 
