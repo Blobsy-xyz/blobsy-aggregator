@@ -4,14 +4,11 @@ use crate::primitives::blob_segment::BlobSegment;
 use crate::submission::rpc_submitter::RpcSubmitter;
 use alloy_eips::merge::SLOT_DURATION_SECS;
 use alloy_primitives::Bytes;
-use alloy_rpc_types_eth::Header;
-use std::os::unix::raw::ino_t;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
-use tracing::field::debug;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 /// Aggregator appending blob segments until current blob is full. Once full new blob is created.
 pub struct AppendingBlobAggregator {

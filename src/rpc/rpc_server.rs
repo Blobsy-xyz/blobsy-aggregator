@@ -1,13 +1,11 @@
 use crate::primitives::blob_segment::BlobSegment;
 use crate::rpc::serialize::RawBlobSegment;
-use jsonrpsee::server::middleware::http::Port;
 use jsonrpsee::server::Server;
 use jsonrpsee::tokio::sync::mpsc;
 use jsonrpsee::tokio::task::JoinHandle;
 use jsonrpsee::{tokio, RpcModule};
 use std::net::{Ipv4Addr, SocketAddrV4};
-use std::time::{Duration, Instant};
-use time::OffsetDateTime;
+use std::time::Duration;
 use tokio::sync::mpsc::error::SendTimeoutError;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};

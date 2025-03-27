@@ -5,12 +5,11 @@ use crate::primitives::blob_segment::{BlobSegment, BlobSegmentHash};
 use crate::submission::rpc_submitter::RpcSubmitter;
 use alloy_primitives::{BlockNumber, B256};
 use alloy_rpc_types_eth::Header;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::sync::{broadcast, mpsc, Mutex};
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::{broadcast, Mutex};
 use tokio_util::sync::CancellationToken;
-use tracing::field::debug;
 use tracing::{debug, info};
 
 /// Aggregation Context for aggregation tasks
@@ -74,7 +73,7 @@ impl BlobAggregator {
 
         let input_channel_buffer_size = 10_000;
         let (input, _output) = broadcast::channel(input_channel_buffer_size);
-        let mut current_block_number: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+        let current_block_number: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
 
         // Accumulate BlobSegments
         let segments_by_block_number = self.blob_segments_by_target_block_number.clone();
@@ -82,7 +81,7 @@ impl BlobAggregator {
         let accumulator_input = input.clone();
         let current_block_number_guard = current_block_number.clone();
         tokio::spawn(async move {
-            let mut blob_segment_receiver = &mut self.blob_segment_receiver;
+            let blob_segment_receiver = &mut self.blob_segment_receiver;
             while let Some(blob_segment) = blob_segment_receiver.recv().await {
                 debug!("Received new blob segment: {:?}", blob_segment);
 
@@ -115,12 +114,12 @@ impl BlobAggregator {
         });
 
         // Accumulate submitted blob segments
-        let mut pending_blob_segment_to_expiration_block: Arc<Mutex<HashMap<B256, BlockNumber>>> =
+        let pending_blob_segment_to_expiration_block: Arc<Mutex<HashMap<B256, BlockNumber>>> =
             Arc::new(Mutex::new(HashMap::new()));
         let pending_inclusion_guard = pending_blob_segment_to_expiration_block.clone();
         let current_block_number_guard = current_block_number.clone();
         tokio::spawn(async move {
-            let mut submitted_partial_blobs_receiver = &mut self.submitted_partial_blobs_receiver;
+            let submitted_partial_blobs_receiver = &mut self.submitted_partial_blobs_receiver;
             while let Some(partial_blobs) = submitted_partial_blobs_receiver.recv().await {
                 debug!("Received SUBMITTED partial blobs: {:?}", partial_blobs);
 
@@ -138,9 +137,9 @@ impl BlobAggregator {
         });
 
         // Listen for new heads and handle aggregation tasks
-        let mut current_block_number_guard = current_block_number.clone();
+        let current_block_number_guard = current_block_number.clone();
         let mut cancellation_token: Option<CancellationToken> = None;
-        let mut new_heads_receiver = &mut self.new_heads_receiver;
+        let new_heads_receiver = &mut self.new_heads_receiver;
         while let Some((new_head, logs)) = new_heads_receiver.recv().await {
             debug!("Received new head: {:?}", new_head);
 

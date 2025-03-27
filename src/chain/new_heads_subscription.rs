@@ -1,22 +1,15 @@
 use crate::chain::new_heads_subscription::BlobSplitter::BlobSegmentPosted;
-use crate::primitives::blob_segment::BlobSegmentHash;
-use crate::submission::rpc_submitter::BlobSplitter::BlobSplitterCalls;
-use alloy_eips::BlockNumberOrTag;
-use alloy_primitives::{address, b256, Address, BlockNumber, B256};
-use alloy_provider::network::primitives::{BlockTransactionsKind, HeaderResponse};
+use alloy_primitives::Address;
 use alloy_provider::{Provider, ProviderBuilder};
-use alloy_rpc_types_eth::BlockNumberOrTag::Latest;
-use alloy_rpc_types_eth::{BlockId, Filter, Header};
+use alloy_rpc_types_eth::{Filter, Header};
 use alloy_sol_types::{sol, SolEvent};
 use alloy_transport_ws::WsConnect;
 use futures::StreamExt;
 use std::time::Duration;
-use tokio::io::Join;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::error::SendTimeoutError;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
-use tracing::instrument::WithSubscriber;
 use tracing::{debug, error, info, warn};
 
 // Codegen from ABI file to interact with the contract.

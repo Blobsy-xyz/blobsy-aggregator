@@ -1,22 +1,17 @@
 use crate::building::blob_aggregator::AggregationContext;
 use crate::building::partial_blob::PartialBlob;
-use crate::primitives::blob_segment::BlobSegment;
 use alloy_eips::eip4844::builder::{SidecarBuilder, SimpleCoder};
 use alloy_eips::eip4844::MAX_BLOBS_PER_BLOCK;
-use alloy_eips::eip7840::BlobParams;
 use alloy_eips::BlockNumberOrTag;
 use alloy_primitives::{Address, Bytes};
-use alloy_provider::fillers::{FillProvider, TxFiller};
 use alloy_provider::network::{
-    AnyNetwork, Ethereum, EthereumWallet, NetworkWallet, TransactionBuilder, TransactionBuilder4844,
+    AnyNetwork, EthereumWallet, NetworkWallet, TransactionBuilder, TransactionBuilder4844,
 };
 use alloy_provider::{Provider, ProviderBuilder, SendableTx};
 use alloy_rpc_types_eth::{FeeHistory, TransactionRequest};
 use alloy_signer_local::PrivateKeySigner;
 use alloy_sol_types::{sol, SolCall};
 use jsonrpsee::client_transport::ws::Url;
-use std::any::Any;
-use std::error::Error;
 use std::sync::Arc;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{mpsc, Mutex};
@@ -62,7 +57,7 @@ impl RpcSubmitter {
         let (partial_blobs_sender, partial_blobs_receiver) =
             mpsc::channel(input_channel_buffer_size);
 
-        let mut ret = Self {
+        let ret = Self {
             http_provider,
             ethereum_wallet,
             blob_splitter_address,
@@ -185,7 +180,7 @@ impl RpcSubmitter {
             SidecarBuilder::with_capacity(partial_blobs.len());
         let mut blob_segments = vec![];
         partial_blobs.iter().for_each(|partial_blob| {
-            let mut partial_blob_data = partial_blob.data().clone();
+            let partial_blob_data = partial_blob.data().clone();
 
             let mut index: u64 = 0;
             partial_blob.segments().iter().for_each(|segment| {

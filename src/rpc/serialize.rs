@@ -2,7 +2,6 @@ use crate::primitives::blob_segment::BlobSegment;
 use alloy_primitives::{Address, Bytes, U128, U64};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 /// Struct to de/serialize json BlobSegment from RPC AP.
 #[derive(Debug, Clone, Serialize, Deserialize, Derivative)]
