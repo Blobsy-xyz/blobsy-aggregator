@@ -1,7 +1,6 @@
 use alloy_eips::eip4844::builder::{PartialSidecar, SidecarCoder};
 use alloy_eips::eip4844::utils::WholeFe;
 use alloy_eips::eip4844::{Blob, FIELD_ELEMENT_BYTES_USIZE, USABLE_BITS_PER_FIELD_ELEMENT};
-use alloy_primitives::hex::ToHexExt;
 
 /// Optimized BLOB coder that uses up to 254 bits (31.75 bytes) of each field element.
 ///
@@ -27,8 +26,10 @@ pub struct OptimizedBlobCoder {
 }
 
 impl OptimizedBlobCoder {
-    const UNALLOCATED_BITS_PER_FE: usize = 256 - USABLE_BITS_PER_FIELD_ELEMENT;
-    const LENGTH_PREFIX_BITS: usize = 32;
+    pub const UNALLOCATED_BITS_PER_FE: usize = 256 - USABLE_BITS_PER_FIELD_ELEMENT;
+    pub const LENGTH_PREFIX_BITS: usize = 32;
+    pub const HEADER_SIZE_BYTES: usize = 32; // 32 bytes for the header
+    pub const LENGTH_PREFIX_SIZE_BYTES: usize = Self::LENGTH_PREFIX_BITS / 8;
 
     /// Create a new instance of `OptimizedCoder`.
     pub fn new(prepend_length: bool) -> Self {
@@ -46,6 +47,11 @@ impl OptimizedBlobCoder {
             "Coder name must fit into 31 bytes (so it's encoded as one FE)"
         );
         NAME
+    }
+
+    /// Check if the coder should prepend a length prefix to the data.
+    pub fn should_prepend_length(&self) -> bool {
+        self.prepend_length
     }
 
     /// Decode a single piece of data from an iterator of valid field elements.
@@ -69,7 +75,7 @@ impl OptimizedBlobCoder {
 
         // Set up initial values
         const MAX_ALLOCATION_SIZE: usize = 2_097_152; // 2 MiB
-        let mut num_bytes = 0;
+        let mut num_bytes;
         let mut start_bit = 0;
 
         // Read data length
@@ -343,12 +349,13 @@ mod tests {
 
     #[test]
     fn test_header_name_encoding() {
-        let mut coder = OptimizedBlobCoder::new(true);
-        let mut builder = SidecarBuilder::from_coder_and_data(coder, &vec![0]);
+        let coder = OptimizedBlobCoder::new(true);
+        let builder = SidecarBuilder::from_coder_and_data(coder, &vec![0]);
 
         let blobs = builder.take();
         let header_fe = blobs[0].as_slice()[0..32].to_vec();
-        let header_bits = OptimizedBlobCoder::field_elements_to_bits(&[header_fe.try_into().unwrap()]);
+        let header_bits =
+            OptimizedBlobCoder::field_elements_to_bits(&[header_fe.try_into().unwrap()]);
         let header_bytes = OptimizedBlobCoder::bits_to_bytes(&header_bits)
             .into_iter()
             .take_while(|&b| b != 0)
@@ -400,11 +407,9 @@ mod tests {
         // Set the last byte to 252 (11111100 in binary)
         data.push(252u8);
 
-        let mut coder = OptimizedBlobCoder::new(false);
+        let coder = OptimizedBlobCoder::new(false);
         let builder = SidecarBuilder::from_coder_and_data(coder, &data);
         let blobs = builder.take();
-
-        let decoded = coder.decode_all(&blobs);
 
         // Check that only first 32 bytes of data are non-zero (skip header)
         let first_32_bytes = blobs[0].as_slice()[32..64].to_vec();

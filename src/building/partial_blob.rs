@@ -1,6 +1,7 @@
 use crate::primitives::blob_segment::BlobSegment;
 use alloy_eips::eip4844::USABLE_BYTES_PER_BLOB;
 use alloy_primitives::Bytes;
+use crate::submission::optimized_blob_coder::OptimizedBlobCoder;
 
 /// Intermediary blob structure for appending blob segments. Upon submission partial blobs are sealed
 /// and submitted as a full blob.
@@ -24,7 +25,10 @@ impl PartialBlob {
 
     /// Check if the blob segment can be appended to the current blob
     pub fn can_append_segment(&self, segment_data: &Bytes) -> bool {
-        self.data.len() + segment_data.len() < USABLE_BYTES_PER_BLOB
+        let mut segment_len = segment_data.len();
+        segment_len += OptimizedBlobCoder::LENGTH_PREFIX_SIZE_BYTES;
+
+        self.data.len() + segment_len < USABLE_BYTES_PER_BLOB
     }
 
     /// Return blob segments in the current partial blob

@@ -1,13 +1,13 @@
 use crate::building::blob_aggregator::AggregationContext;
 use crate::building::partial_blob::PartialBlob;
-use alloy_eips::eip4844::builder::{SidecarBuilder, SimpleCoder};
-use alloy_eips::eip4844::MAX_BLOBS_PER_BLOCK;
+use crate::submission::optimized_blob_coder::OptimizedBlobCoder;
+use crate::submission::rpc_submitter::IBlobReceiver::BlobSegment;
+use alloy_eips::eip4844::builder::SidecarBuilder;
+use alloy_eips::eip4844::{BlobTransactionSidecar, MAX_BLOBS_PER_BLOCK, USABLE_BYTES_PER_BLOB};
 use alloy_eips::BlockNumberOrTag;
 use alloy_primitives::{Address, Bytes};
-use alloy_provider::network::{
-    AnyNetwork, EthereumWallet, NetworkWallet, TransactionBuilder, TransactionBuilder4844,
-};
-use alloy_provider::{Provider, ProviderBuilder, SendableTx};
+use alloy_provider::network::{EthereumWallet, TransactionBuilder, TransactionBuilder4844};
+use alloy_provider::{Provider, ProviderBuilder, SendableTx, WalletProvider};
 use alloy_rpc_types_eth::{FeeHistory, TransactionRequest};
 use alloy_signer_local::PrivateKeySigner;
 use alloy_sol_types::{sol, SolCall};
@@ -125,10 +125,7 @@ impl RpcSubmitter {
             .unwrap();
 
         // Create Blob TxRequest to be submitted
-        let signer_address: Address =
-            <EthereumWallet as NetworkWallet<AnyNetwork>>::default_signer_address(
-                &self.ethereum_wallet,
-            );
+        let signer_address: Address = provider.default_signer_address();
         let tx_request = self
             .create_tx(partial_blobs.clone(), fee_history)
             .await
@@ -175,45 +172,12 @@ impl RpcSubmitter {
             .send(partial_blobs.clone())
             .await;
 
-        // Create BlobTransactionSidecar and BlobSegments data to be included in the transaction
-        let mut sidecar: SidecarBuilder<SimpleCoder> =
-            SidecarBuilder::with_capacity(partial_blobs.len());
-        let mut blob_segments = vec![];
-        partial_blobs.iter().for_each(|partial_blob| {
-            let partial_blob_data = partial_blob.data().clone();
-
-            let mut index: u64 = 0;
-            partial_blob.segments().iter().for_each(|segment| {
-                let length = segment.blob_segment_data.len() as u64;
-                blob_segments.push(IBlobReceiver::BlobSegment {
-                    receiverAddress: Default::default(),
-                    firstBlobIndex: 0,
-                    numBlobs: 0,
-                    offset: index,
-                    length: length - 1,
-                    payload: Default::default(),
-                    blobHash: segment.hash,
-                });
-                index += length;
-            });
-
-            //TODO: Hack to satisfy SimpleCoder
-            let diff = 126976 - 31 - partial_blob_data.len();
-            let empty_bytes = vec![0u8; diff];
-            let mut partial_blob_data_vec = partial_blob_data.to_vec();
-            partial_blob_data_vec.extend_from_slice(&empty_bytes);
-
-            let full_blob_data = Bytes::from(partial_blob_data_vec);
-            sidecar.ingest(&full_blob_data);
-        });
-
-        // TODO: Remove expect
-        let sidecar = sidecar
-            .build()
-            .expect("Failed to create BlobTransactionSidecar");
+        // Create sidecar and Solidity structs
+        let (sidecar, blob_segments) =
+            RpcSubmitter::create_sidecar_and_solidity_structs(partial_blobs);
         let data = BlobSplitter::postBlobCall::new((blob_segments,)).abi_encode();
 
-        // Adjust execution priority fee, as this is the ordering criteria in GETH
+        // Adjust execution priority fee, as this is the ordering criteria of blob transactions
         let rewards = fee_history.reward.unwrap();
         let priority_fee = rewards.get(0).unwrap().get(0).unwrap().clone();
         let max_fee = priority_fee + fee_history.base_fee_per_gas.last().unwrap();
@@ -227,8 +191,271 @@ impl RpcSubmitter {
             .with_input(data)
     }
 
+    fn create_sidecar_and_solidity_structs(
+        partial_blobs: Vec<PartialBlob>,
+    ) -> (BlobTransactionSidecar, Vec<BlobSegment>) {
+        // Create BlobTransactionSidecar and BlobSegments data to be included in the transaction
+        let coder = OptimizedBlobCoder::new(true);
+        let mut sidecar = SidecarBuilder::from_coder_and_capacity(coder, partial_blobs.len());
+        let mut blob_segments = vec![];
+        partial_blobs
+            .iter()
+            .enumerate()
+            .for_each(|(i, partial_blob)| {
+                let partial_blob_data = partial_blob.data().clone();
+
+                // Create BlobSegment structs for Solidity contract call
+                let mut offset: u64 = 0;
+                partial_blob.segments().iter().for_each(|segment| {
+                    let length = segment.blob_segment_data.len() as u64;
+                    blob_segments.push(BlobSegment {
+                        receiverAddress: segment.callback_contract.unwrap_or_default(),
+                        firstBlobIndex: i as u64,
+                        numBlobs: 1,
+                        offset,
+                        length,
+                        payload: segment.callback_payload.clone().unwrap_or_default(),
+                        blobHash: segment.hash,
+                    });
+                    offset += length;
+                });
+
+                // Pad remaining blob space with zeros, so we fill the whole blob
+                let mut diff = USABLE_BYTES_PER_BLOB as i64;
+                diff -= partial_blob_data.len() as i64; // Subtract blob data length
+
+                // Subtract header size
+                if i == 0 {
+                    diff -= OptimizedBlobCoder::HEADER_SIZE_BYTES as i64;
+                }
+
+                // Subtract blob length size
+                if coder.should_prepend_length() {
+                    diff -= OptimizedBlobCoder::LENGTH_PREFIX_SIZE_BYTES as i64;
+                }
+
+                // Handle negative diff, which means more than one blob is needed
+                if diff < 0 {
+                    diff += USABLE_BYTES_PER_BLOB as i64;
+                }
+
+                let empty_bytes = vec![0u8; diff as usize];
+                let mut partial_blob_data_vec = partial_blob_data.to_vec();
+                partial_blob_data_vec.extend_from_slice(&empty_bytes);
+
+                // Create & ingest full blob data
+                let full_blob_data = Bytes::from(partial_blob_data_vec);
+                sidecar.ingest(&full_blob_data);
+            });
+
+        // TODO: Remove expect
+        let sidecar = sidecar
+            .build()
+            .expect("Failed to create BlobTransactionSidecar");
+
+        (sidecar, blob_segments)
+    }
+
     /// Get clone of the sender channel for submitted partial blobs.
     pub fn get_partial_blobs_sender(&self) -> mpsc::Sender<Vec<PartialBlob>> {
         self.partial_blobs_sender.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::building::partial_blob::PartialBlob;
+    use crate::primitives::blob_segment::BlobSegment;
+    use crate::submission::optimized_blob_coder::OptimizedBlobCoder;
+    use crate::submission::rpc_submitter::RpcSubmitter;
+    use alloy_eips::eip4844::USABLE_BYTES_PER_BLOB;
+    use alloy_primitives::{Bytes, FixedBytes, U256};
+
+    #[test]
+    fn test_fully_pack_one_blob() {
+        let mut length = USABLE_BYTES_PER_BLOB;
+        length -= OptimizedBlobCoder::HEADER_SIZE_BYTES;
+        length -= OptimizedBlobCoder::LENGTH_PREFIX_SIZE_BYTES;
+
+        // Create a blob with data
+        let partial_blob_data = Bytes::from(vec![255u8; length]);
+        let partial_blob = create_partial_blob(partial_blob_data);
+
+        // Create sidecar and solidity structs
+        let (sidecar, blob_segments) =
+            RpcSubmitter::create_sidecar_and_solidity_structs(vec![partial_blob]);
+
+        // Assert there is only one blob with 1 segment
+        assert_eq!(sidecar.blobs.len(), 1);
+        assert_eq!(blob_segments.len(), 1);
+
+        // Assert all field elements are greater than zero
+        let field_elements_as_u256 = sidecar.blobs[0]
+            .chunks(32) // U256 is 32 bytes (256 bits)
+            .map(|chunk| FixedBytes::from_slice(chunk).into())
+            .collect::<Vec<U256>>();
+        assert!(field_elements_as_u256.iter().all(|fe| *fe > U256::ZERO));
+    }
+
+    #[test]
+    fn test_fully_pack_two_blobs() {
+        let mut length = USABLE_BYTES_PER_BLOB;
+        length -= OptimizedBlobCoder::HEADER_SIZE_BYTES;
+        length -= OptimizedBlobCoder::LENGTH_PREFIX_SIZE_BYTES;
+
+        // Create a blob with data
+        let partial_blob_data_1 = Bytes::from(vec![255u8; length]);
+        let partial_blob_1 = create_partial_blob(partial_blob_data_1);
+
+        length += OptimizedBlobCoder::HEADER_SIZE_BYTES; // Header is present only in the first blob
+        let partial_blob_data_2 = Bytes::from(vec![255u8; length]);
+        let partial_blob_2 = create_partial_blob(partial_blob_data_2);
+
+        // Create sidecar and solidity structs
+        let (sidecar, blob_segments) =
+            RpcSubmitter::create_sidecar_and_solidity_structs(vec![partial_blob_1, partial_blob_2]);
+
+        // Assert there are two blobs with 1 segment each
+        assert_eq!(sidecar.blobs.len(), 2);
+        assert_eq!(blob_segments.len(), 2);
+
+        // Assert ALL field elements of BLOB 1 are greater than zero
+        let field_elements_as_u256 = sidecar.blobs[0]
+            .chunks(32) // U256 is 32 bytes (256 bits)
+            .map(|chunk| FixedBytes::from_slice(chunk).into())
+            .collect::<Vec<U256>>();
+        assert!(field_elements_as_u256.iter().all(|fe| *fe > U256::ZERO));
+
+        // Assert ALL field elements of BLOB 2 are greater than zero
+        let field_elements_as_u256 = sidecar.blobs[1]
+            .chunks(32) // U256 is 32 bytes (256 bits)
+            .map(|chunk| FixedBytes::from_slice(chunk).into())
+            .collect::<Vec<U256>>();
+        assert!(field_elements_as_u256.iter().all(|fe| *fe > U256::ZERO));
+    }
+
+    #[test]
+    fn test_pad_first_blob() {
+        let mut length = 31;
+        length -= OptimizedBlobCoder::LENGTH_PREFIX_SIZE_BYTES;
+
+        // Create a blob with data
+        let partial_blob_data_1 = Bytes::from(vec![255u8; length]);
+        let partial_blob_1 = create_partial_blob(partial_blob_data_1);
+
+        length = USABLE_BYTES_PER_BLOB;
+        length -= OptimizedBlobCoder::LENGTH_PREFIX_SIZE_BYTES;
+        let partial_blob_data_2 = Bytes::from(vec![255u8; length]);
+        let partial_blob_2 = create_partial_blob(partial_blob_data_2);
+
+        // Create sidecar and solidity structs
+        let (sidecar, blob_segments) =
+            RpcSubmitter::create_sidecar_and_solidity_structs(vec![partial_blob_1, partial_blob_2]);
+
+        // Assert there are two blobs with 1 segment each
+        assert_eq!(sidecar.blobs.len(), 2);
+        assert_eq!(blob_segments.len(), 2);
+
+        // Assert ONLY FIRST TWO field element of BLOB 2 is greater than zero and the rest are zero
+        let field_elements_as_u256 = sidecar.blobs[0]
+            .chunks(32) // U256 is 32 bytes (256 bits)
+            .map(|chunk| FixedBytes::from_slice(chunk).into())
+            .collect::<Vec<U256>>();
+        assert!(field_elements_as_u256[0] > U256::ZERO);
+        assert!(field_elements_as_u256[1] > U256::ZERO);
+        assert!(field_elements_as_u256[2..]
+            .iter()
+            .all(|fe| *fe == U256::ZERO));
+
+        // Assert ALL field elements of BLOB 2 are greater than zero
+        let field_elements_as_u256 = sidecar.blobs[1]
+            .chunks(32) // U256 is 32 bytes (256 bits)
+            .map(|chunk| FixedBytes::from_slice(chunk).into())
+            .collect::<Vec<U256>>();
+        assert!(field_elements_as_u256.iter().all(|fe| *fe > U256::ZERO));
+    }
+
+    #[test]
+    fn test_overflow_into_two_blobs() {
+        let mut length = USABLE_BYTES_PER_BLOB;
+        length -= OptimizedBlobCoder::HEADER_SIZE_BYTES;
+        length -= OptimizedBlobCoder::LENGTH_PREFIX_SIZE_BYTES;
+        length += 1; // Add 1 byte to overflow into the second blob
+
+        // Create a blob with data
+        let partial_blob_data = Bytes::from(vec![254u8; length]);
+        let partial_blob = PartialBlob::new(
+            vec![
+                BlobSegment {
+                    block: None,
+                    min_timestamp: None,
+                    max_timestamp: None,
+                    max_blob_segment_fee: 0,
+                    blob_segment_data: partial_blob_data.clone().slice(0..(length - 1)),
+                    callback_contract: None,
+                    callback_payload: None,
+                    hash: Default::default(),
+                    uuid: Default::default(),
+                    metadata: Default::default(),
+                },
+                BlobSegment {
+                    block: None,
+                    min_timestamp: None,
+                    max_timestamp: None,
+                    max_blob_segment_fee: 0,
+                    blob_segment_data: partial_blob_data.clone().slice(length - 1..length),
+                    callback_contract: None,
+                    callback_payload: None,
+                    hash: Default::default(),
+                    uuid: Default::default(),
+                    metadata: Default::default(),
+                },
+            ],
+            partial_blob_data,
+        );
+
+        // Create sidecar and solidity structs
+        let (sidecar, blob_segments) =
+            RpcSubmitter::create_sidecar_and_solidity_structs(vec![partial_blob]);
+
+        // Assert there are two blobs with two segments
+        assert_eq!(sidecar.blobs.len(), 2);
+        assert_eq!(blob_segments.len(), 2);
+
+        // Assert ALL field elements of BLOB 1 are greater than zero
+        let field_elements_as_u256 = sidecar.blobs[0]
+            .chunks(32) // U256 is 32 bytes (256 bits)
+            .map(|chunk| FixedBytes::from_slice(chunk).into())
+            .collect::<Vec<U256>>();
+        assert!(field_elements_as_u256.iter().all(|fe| *fe > U256::ZERO));
+
+        // Assert ONLY FIRST field element of BLOB 2 is greater than zero and the rest are zero
+        let field_elements_as_u256 = sidecar.blobs[1]
+            .chunks(32) // U256 is 32 bytes (256 bits)
+            .map(|chunk| FixedBytes::from_slice(chunk).into())
+            .collect::<Vec<U256>>();
+
+        assert!(field_elements_as_u256[0] > U256::ZERO);
+        assert!(field_elements_as_u256[1..]
+            .iter()
+            .all(|fe| *fe == U256::ZERO));
+    }
+
+    fn create_partial_blob(data: Bytes) -> PartialBlob {
+        PartialBlob::new(
+            vec![BlobSegment {
+                block: None,
+                min_timestamp: None,
+                max_timestamp: None,
+                max_blob_segment_fee: 0,
+                blob_segment_data: data.clone(),
+                callback_contract: None,
+                callback_payload: None,
+                hash: Default::default(),
+                uuid: Default::default(),
+                metadata: Default::default(),
+            }],
+            data,
+        )
     }
 }
