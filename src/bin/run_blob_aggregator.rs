@@ -1,5 +1,4 @@
 use alloy_primitives::address;
-use alloy_rpc_types_eth::pubsub::SubscriptionKind::NewHeads;
 use alloy_signer_local::PrivateKeySigner;
 use blobsy_aggregator::building::blob_aggregator::BlobAggregator;
 use blobsy_aggregator::chain::new_heads_subscription::NewHeadsSubscription;
