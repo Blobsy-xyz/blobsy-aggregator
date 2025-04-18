@@ -160,15 +160,14 @@ impl RpcSubmitter {
         fee_history: FeeHistory,
     ) -> TransactionRequest {
         let mut partial_blobs = partial_blobs.clone();
-        // TODO: Sort to submit only the best partial blobs
-        // partial_blobs.sort();
+        partial_blobs.sort();
 
         if partial_blobs.len() > MAX_BLOBS_PER_BLOCK {
             partial_blobs.truncate(MAX_BLOBS_PER_BLOCK);
         }
 
         // Immediately signal partial blobs are being submitted
-        self.submitted_partial_blobs_sender
+        let _ = self.submitted_partial_blobs_sender
             .send(partial_blobs.clone())
             .await;
 
@@ -412,6 +411,7 @@ mod tests {
                 },
             ],
             partial_blob_data,
+            0,
         );
 
         // Create sidecar and solidity structs
@@ -456,6 +456,7 @@ mod tests {
                 metadata: Default::default(),
             }],
             data,
+            0,
         )
     }
 }

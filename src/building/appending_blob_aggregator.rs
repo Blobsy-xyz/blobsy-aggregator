@@ -101,7 +101,9 @@ impl AppendingBlobAggregator {
                     new_data.extend_from_slice(&segment.blob_segment_data.clone());
                     let new_data_bytes = Bytes::from(new_data);
 
-                    new_partial_blobs.push(PartialBlob::new(new_segments, new_data_bytes));
+                    let new_total_fee = partial_blob.total_fee() + segment.max_blob_segment_fee;
+
+                    new_partial_blobs.push(PartialBlob::new(new_segments, new_data_bytes, new_total_fee));
 
                     appended = true
                 }
@@ -112,6 +114,7 @@ impl AppendingBlobAggregator {
                     new_partial_blobs.push(PartialBlob::new(
                         vec![segment.clone()],
                         segment.blob_segment_data.clone(),
+                        0,
                     ));
                 }
 
@@ -120,7 +123,7 @@ impl AppendingBlobAggregator {
 
                 // Send the latest partial blobs state to the RPC submitter
                 debug!("Send latest Appending Blob Aggregator state");
-                partial_blobs_sender.send(new_partial_blobs).await;
+                let _ = partial_blobs_sender.send(new_partial_blobs).await;
             }
         }
     }

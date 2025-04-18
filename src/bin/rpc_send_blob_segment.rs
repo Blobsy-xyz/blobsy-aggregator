@@ -1,10 +1,9 @@
 use alloy_primitives::hex::ToHexExt;
-use alloy_primitives::{keccak256, Bytes, U128};
+use alloy_primitives::{Bytes, U128};
 use blobsy_aggregator::rpc::serialize::RawBlobSegment;
 use jsonrpsee::core::client::ClientT;
 use jsonrpsee::http_client::HttpClientBuilder;
-use std::any::Any;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::time::sleep;
 use tracing::{debug, error};
 
@@ -22,8 +21,8 @@ async fn main() -> eyre::Result<()> {
     // Crate and send new blob segment every [timeout] seconds
     let timeout = Duration::from_secs(12);
     loop {
-        /// The [epoch_timestamp] ensures each blob segment is unique.
-        /// To send duplicate segments, use a fixed timestamp value instead of the current time.
+        // The [epoch_timestamp] ensures each blob segment is unique.
+        // To send duplicate segments, use a fixed timestamp value instead of the current time.
         let now = SystemTime::now();
         let epoch_timestamp = now.duration_since(UNIX_EPOCH)?.as_secs();
         let data = format!("RPC_SEND_BLOB_SEGMENT [timestamp: {}]", epoch_timestamp).encode_hex();
